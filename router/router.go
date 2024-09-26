@@ -34,10 +34,14 @@ func AppRouter() http.Handler {
 
 	departmentController := controller.NewQueryController[model.Department]()
 	fieldController := controller.NewQueryController[model.Field]()
+	roomController := controller.NewQueryController[model.Room]()
+	profileDepartmentController := controller.NewQueryController[model.ProfileDepartment]()
 
 	app.Route("/api/v1", func(r chi.Router) {
 		r.Post("/department", departmentController.Query)
 		r.Post("/field", fieldController.Query)
+		r.Post("/room", roomController.Query)
+		r.Post("/profile-department", profileDepartmentController.Query)
 	})
 
 	log.Printf(
