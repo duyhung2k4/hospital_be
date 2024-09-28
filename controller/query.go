@@ -54,6 +54,7 @@ func (c *queryController[T]) Query(w http.ResponseWriter, r *http.Request) {
 			payload.Args...,
 		)
 	case constant.DELETE:
+		result = nil
 		errHandle = c.queryDepartment.Delete(
 			payload.Condition,
 			payload.Args...,

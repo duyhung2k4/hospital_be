@@ -48,7 +48,7 @@ func (s *queryService[T]) Find(preload []string, omit map[string][]string, condi
 		})
 	}
 
-	err := query.Find(&list).Error
+	err := query.Order("id asc").Find(&list).Error
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (s *queryService[T]) Create(data T) (*T, error) {
 
 func (s *queryService[T]) Update(data T, condition string, args ...interface{}) (*T, error) {
 	newData := data
-	if err := s.psql.Where(condition, args...).Updates(&newData).Error; err != nil {
+	if err := s.psql.Where(condition, args...).Updates(&newData).First(&newData).Error; err != nil {
 		return nil, err
 	}
 
