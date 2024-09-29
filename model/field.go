@@ -11,7 +11,7 @@ type Field struct {
 	Placeholder   string         `json:"placeholder"`
 	Name          string         `json:"name" gorm:"uniqueIndex:name_department_idx"`
 	Size          int            `json:"size"`                             // width: 1 - 12
-	Type          string         `json:"type"`                             // int - float - text - area - select
+	Type          string         `json:"type"`                             // number - text - area - select
 	DefaultValues pq.StringArray `json:"defaultValues" gorm:"type:text[]"` // string []{ label: string, value: string }
 
 	DepartmentId uint        `json:"departmentId" gorm:"uniqueIndex:name_department_idx"`

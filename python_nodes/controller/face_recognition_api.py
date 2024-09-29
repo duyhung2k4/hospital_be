@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-import json
 import face_recognition
 import numpy as np
 import os

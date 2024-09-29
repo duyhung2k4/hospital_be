@@ -11,7 +11,7 @@ type Profile struct {
 	Address    string `json:"address"`
 	Gender     string `json:"gender"`
 	Password   string `json:"password"`
-	Role       string `json:"role"` // admin - user - clin - spec
+	Role       string `json:"role"` // admin - user - clin - spec - room
 
 	Faces []Face `json:"faces" gorm:"foreignKey:ProfileId"`
 }

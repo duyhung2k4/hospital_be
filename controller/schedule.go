@@ -3,23 +3,25 @@ package controller
 import (
 	"app/constant"
 	"app/dto/request"
+	"app/model"
 	"app/service"
 	"encoding/json"
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/google/uuid"
 )
 
-type queryController[T any] struct {
-	query service.QueryService[T]
+type scheduleController struct {
+	query service.QueryService[model.Schedule]
 }
 
-type QueryController[T any] interface {
+type ScheduleController interface {
 	Query(w http.ResponseWriter, r *http.Request)
 }
 
-func (c *queryController[T]) Query(w http.ResponseWriter, r *http.Request) {
-	var payload request.QueryReq[T]
+func (c *scheduleController) Query(w http.ResponseWriter, r *http.Request) {
+	var payload request.QueryReq[model.Schedule]
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		badRequest(w, r, err)
 		return
@@ -44,6 +46,9 @@ func (c *queryController[T]) Query(w http.ResponseWriter, r *http.Request) {
 			payload.Args...,
 		)
 	case constant.CREATE:
+		code, _ := uuid.NewV7()
+		payload.Data.Code = code.String()
+		payload.Data.Status = model.S_PENDING
 		result, errHandle = c.query.Create(payload.Data)
 	case constant.UPDATE:
 		result, errHandle = c.query.Update(
@@ -74,8 +79,8 @@ func (c *queryController[T]) Query(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, res)
 }
 
-func NewQueryController[T any]() QueryController[T] {
-	return &queryController[T]{
-		query: service.NewQueryService[T](),
+func NewScheduleController() ScheduleController {
+	return &scheduleController{
+		query: service.NewQueryService[model.Schedule](),
 	}
 }

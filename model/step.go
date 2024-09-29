@@ -11,7 +11,7 @@ type Step struct {
 	ScheduleId   uint        `json:"scheduleId"`
 	DepartmentId uint        `json:"departmentId"`
 	RoomId       uint        `json:"roomId"`
-	SpecId       uint        `json:"specId"`
+	SpecId       *uint       `json:"specId"`
 	Schedule     *Schedule   `json:"schedule" gorm:"foreignKey:ScheduleId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Department   *Department `json:"department" gorm:"foreignKey:DepartmentId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Room         *Room       `json:"room" gorm:"foreignKey:RoomId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`

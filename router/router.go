@@ -36,7 +36,7 @@ func AppRouter() http.Handler {
 	fieldController := controller.NewQueryController[model.Field]()
 	roomController := controller.NewQueryController[model.Room]()
 	profileDepartmentController := controller.NewQueryController[model.ProfileDepartment]()
-	scheduleController := controller.NewQueryController[model.Schedule]()
+	scheduleController := controller.NewScheduleController()
 
 	app.Route("/api/v1", func(r chi.Router) {
 		r.Route("/query", func(query chi.Router) {
