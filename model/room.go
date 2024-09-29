@@ -9,4 +9,5 @@ type Room struct {
 
 	DepartmentId uint        `json:"departmentId"`
 	Department   *Department `json:"department" gorm:"foreignKey: DepartmentId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Steps        []Step      `json:"steps" gorm:"foreignKey: RoomId"`
 }

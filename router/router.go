@@ -46,6 +46,12 @@ func AppRouter() http.Handler {
 			query.Post("/department", departmentController.Query)
 			query.Post("/profile-department", profileDepartmentController.Query)
 		})
+
+		r.Route("/schedule", func(schedule chi.Router) {
+			schedule.Get("/call-medical-file", scheduleController.CallMedicalFile)
+			schedule.Post("/pull-medical-file", scheduleController.PullMedicalFile)
+			schedule.Post("/transit", scheduleController.Transit)
+		})
 	})
 
 	log.Printf(
