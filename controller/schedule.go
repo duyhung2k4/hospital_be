@@ -59,6 +59,8 @@ func (c *scheduleController) Query(w http.ResponseWriter, r *http.Request) {
 	case constant.UPDATE:
 		result, errHandle = c.query.Update(
 			payload.Data,
+			payload.Preload,
+			payload.Omit,
 			payload.Condition,
 			payload.Args...,
 		)

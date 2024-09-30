@@ -14,7 +14,7 @@ type QueryService[T any] interface {
 	First(preload []string, omit map[string][]string, condition string, agrs ...interface{}) (*T, error)
 	Find(preload []string, omit map[string][]string, condition string, agrs ...interface{}) ([]T, error)
 	Create(data T) (*T, error)
-	Update(data T, condition string, args ...interface{}) (*T, error)
+	Update(data T, preload []string, omit map[string][]string, condition string, args ...interface{}) (*T, error)
 	Delete(condition string, args ...interface{}) error
 }
 
@@ -64,9 +64,17 @@ func (s *queryService[T]) Create(data T) (*T, error) {
 	return &newData, nil
 }
 
-func (s *queryService[T]) Update(data T, condition string, args ...interface{}) (*T, error) {
+func (s *queryService[T]) Update(data T, preload []string, omit map[string][]string, condition string, args ...interface{}) (*T, error) {
 	newData := data
-	if err := s.psql.Where(condition, args...).Updates(&newData).First(&newData).Error; err != nil {
+
+	query := s.psql.Where(condition, args...).Updates(&newData)
+	for _, p := range preload {
+		query.Preload(p, func(tx *gorm.DB) *gorm.DB {
+			return tx.Omit(omit[p]...)
+		})
+	}
+
+	if err := query.First(&newData).Error; err != nil {
 		return nil, err
 	}
 

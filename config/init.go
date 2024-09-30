@@ -12,4 +12,5 @@ func init() {
 	// connect
 	loadEnv()
 	connectPostgresql(*db)
+	initSmptAuth()
 }

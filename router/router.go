@@ -38,6 +38,8 @@ func AppRouter() http.Handler {
 	profileDepartmentController := controller.NewQueryController[model.ProfileDepartment]()
 	scheduleController := controller.NewScheduleController()
 
+	roomControllerCustom := controller.NewRoomController()
+
 	app.Route("/api/v1", func(r chi.Router) {
 		r.Route("/query", func(query chi.Router) {
 			query.Post("/room", roomController.Query)
@@ -51,6 +53,12 @@ func AppRouter() http.Handler {
 			schedule.Get("/call-medical-file", scheduleController.CallMedicalFile)
 			schedule.Post("/pull-medical-file", scheduleController.PullMedicalFile)
 			schedule.Post("/transit", scheduleController.Transit)
+		})
+
+		r.Route("/room", func(room chi.Router) {
+			room.Get("/call-step", roomControllerCustom.CallStep)
+			room.Post("/pull-step", roomControllerCustom.PullStep)
+			room.Post("/add-account", roomControllerCustom.AddAccount)
 		})
 	})
 

@@ -28,7 +28,6 @@ func (s *scheduleService) PullSchedule() (*model.Schedule, error) {
 	// Locking
 	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
 		Where("status = ?", model.S_PENDING).
-		Limit(1).
 		First(&schedule).
 		Error; err != nil {
 		tx.Rollback()
@@ -36,7 +35,7 @@ func (s *scheduleService) PullSchedule() (*model.Schedule, error) {
 	}
 
 	if err := tx.Model(&schedule).
-		Update("status", model.S_EXAMINING).
+		Update("status = ?", model.S_EXAMINING).
 		Error; err != nil {
 		tx.Rollback()
 		return nil, err
