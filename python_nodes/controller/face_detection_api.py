@@ -5,6 +5,7 @@ import os
 
 face_detection_bp = Blueprint('face_detection', __name__)
 
+# Kiểm tra xem có phải chỉ có 1 khuôn mặt không
 @face_detection_bp.route('/detect_single_face', methods=['POST'])
 def detect_single_face():
     image_path = request.json.get("input_image_path")

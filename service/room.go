@@ -115,9 +115,11 @@ func (s *roomService) CallStep(roomId uint) (*model.Step, error) {
 func (s *roomService) AddAccount(payload request.AddAccountRoomReq) (*model.Room, error) {
 	var room *model.Room
 	var newProfile *model.Profile
+	var profile *model.Profile
+	var err error
 
 	tx := s.psql.Begin()
-	if err := tx.Model(&model.Room{}).Where("id = ?", payload.RoomId).First(&room).Error; err != nil {
+	if err = tx.Model(&model.Room{}).Where("id = ?", payload.RoomId).First(&room).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
@@ -131,17 +133,32 @@ func (s *roomService) AddAccount(payload request.AddAccountRoomReq) (*model.Room
 		Password: passwordHash,
 		RoomId:   &room.ID,
 	}
-	if err := tx.Model(&model.Profile{}).Create(&newProfile).Error; err != nil {
+
+	if err = tx.Model(&model.Profile{}).
+		Where("room_id = ?", payload.RoomId).
+		First(&profile).
+		Error; err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
-	data := fmt.Sprintf("Tài khoản: %s / Mật khẩu: %s", room.Code, passwordHash)
-	if err := s.smtpUtils.SendEmail(data, payload.EmailAccept); err != nil {
+	if profile.ID == 0 {
+		err = tx.Model(&model.Profile{}).Create(&newProfile).Error
+	} else {
+		err = tx.Model(&model.Profile{}).Where("room_id = ?", payload.RoomId).Updates(&newProfile).Error
+	}
+
+	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	if err := tx.Commit().Error; err != nil {
+	data := fmt.Sprintf("%s / %s", room.Code, payload.Password)
+	if err = s.smtpUtils.SendEmail(data, payload.EmailAccept); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err = tx.Commit().Error; err != nil {
 		return nil, err
 	}
 

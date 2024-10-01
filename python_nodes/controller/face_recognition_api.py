@@ -5,6 +5,7 @@ import os
 
 face_recognition_bp = Blueprint('face_recognition', __name__)
 
+# Kiểm tra xem khớp khuôn mặt nào
 @face_recognition_bp.route('/recognize_faces', methods=['POST'])
 def recognize_faces_from_db():
     data = request.json

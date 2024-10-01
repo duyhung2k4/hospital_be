@@ -21,4 +21,9 @@ func loadEnv() {
 	dbName = os.Getenv(DB_NAME)
 	dbUser = os.Getenv(DB_USER)
 	dbPassword = os.Getenv(DB_PASSWORD)
+
+	smtpEmail = os.Getenv(SMTP_EMAIL)
+	smtpHost = os.Getenv(SMTP_HOST)
+	smtpPort = os.Getenv(SMTP_PORT)
+	smtpPassword = os.Getenv(SMTP_PASSWORD)
 }

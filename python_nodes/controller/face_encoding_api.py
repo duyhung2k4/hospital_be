@@ -5,6 +5,7 @@ import numpy as np
 
 face_encoding_bp = Blueprint('face_encoding', __name__)
 
+# Mã hóa khuôn mặt
 @face_encoding_bp.route('/face_encoding', methods=['POST'])
 def face_encoding():
     directory_path = request.json.get("directory_path")
