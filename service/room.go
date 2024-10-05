@@ -132,6 +132,7 @@ func (s *roomService) AddAccount(payload request.AddAccountRoomReq) (*model.Room
 		Username: room.Code,
 		Password: passwordHash,
 		RoomId:   &room.ID,
+		Role:     string(model.ROOM),
 	}
 
 	if err = tx.Model(&model.Profile{}).

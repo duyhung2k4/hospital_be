@@ -5,6 +5,7 @@ import (
 	"app/dto/request"
 	"app/model"
 	"errors"
+	"log"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -51,6 +52,8 @@ func (s *scheduleService) PullSchedule() (*model.Schedule, error) {
 func (s *scheduleService) Transit(payload request.TransitReq) error {
 	var steps []model.Step
 
+	log.Println(payload)
+
 	tx := s.psql.Begin()
 
 	if result := tx.Model(&model.Schedule{}).
@@ -63,6 +66,9 @@ func (s *scheduleService) Transit(payload request.TransitReq) error {
 	}
 
 	if len(payload.DepartmentIds) == 0 {
+		if err := tx.Commit().Error; err != nil {
+			return err
+		}
 		return nil
 	}
 

@@ -39,8 +39,15 @@ func (s *queryService[T]) First(preload []string, omit map[string][]string, cond
 
 func (s *queryService[T]) Find(preload []string, omit map[string][]string, condition string, agrs ...interface{}) ([]T, error) {
 	var list []T
+	var personOmit []string
 
-	query := s.psql.Where(condition, agrs...)
+	for key, omitChild := range omit {
+		if len(omitChild) == 0 {
+			personOmit = append(personOmit, key)
+		}
+	}
+
+	query := s.psql.Where(condition, agrs...).Omit(personOmit...)
 
 	for _, p := range preload {
 		query.Preload(p, func(tx *gorm.DB) *gorm.DB {
