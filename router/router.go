@@ -36,6 +36,7 @@ func AppRouter() http.Handler {
 	fieldController := controller.NewQueryController[model.Field]()
 	roomController := controller.NewQueryController[model.Room]()
 	profileDepartmentController := controller.NewQueryController[model.ProfileDepartment]()
+	profileController := controller.NewQueryController[model.Profile]()
 	scheduleController := controller.NewScheduleController()
 
 	roomControllerCustom := controller.NewRoomController()
@@ -46,6 +47,7 @@ func AppRouter() http.Handler {
 			query.Post("/field", fieldController.Query)
 			query.Post("/schedule", scheduleController.Query)
 			query.Post("/department", departmentController.Query)
+			query.Post("/profile", profileController.Query)
 			query.Post("/profile-department", profileDepartmentController.Query)
 		})
 
