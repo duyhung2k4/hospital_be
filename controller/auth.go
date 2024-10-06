@@ -50,8 +50,8 @@ func (a *authController) CreateAdmin(w http.ResponseWriter, r *http.Request) {
 
 	res := Response{
 		Data: map[string]interface{}{
-			username: newProfile.Username,
-			password: "tk_admin@123456",
+			"username": newProfile.Username,
+			"password": "tk_admin@123456",
 		},
 		Message: "OK",
 		Status:  200,
