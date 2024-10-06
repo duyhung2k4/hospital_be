@@ -5,9 +5,12 @@ import (
 	"app/dto/request"
 	"app/model"
 	"app/service"
+	"app/utils"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
@@ -17,6 +20,7 @@ import (
 type scheduleController struct {
 	query           service.QueryService[model.Schedule]
 	scheduleService service.ScheduleService
+	jwtUtils        utils.JwtUtils
 }
 
 type ScheduleController interface {
@@ -39,16 +43,21 @@ func (c *scheduleController) Query(w http.ResponseWriter, r *http.Request) {
 	switch payload.Method {
 	case constant.GET:
 		result, errHandle = c.query.First(
-			payload.Preload,
-			payload.Omit,
-			payload.Condition,
+			request.FirstPayload{
+				Preload:   payload.Preload,
+				Omit:      payload.Omit,
+				Condition: payload.Condition,
+			},
 			payload.Args...,
 		)
 	case constant.GET_ALL:
 		result, errHandle = c.query.Find(
-			payload.Preload,
-			payload.Omit,
-			payload.Condition,
+			request.FindPayload{
+				Preload:   payload.Preload,
+				Omit:      payload.Omit,
+				Condition: payload.Condition,
+				Order:     payload.Order,
+			},
 			payload.Args...,
 		)
 	case constant.CREATE:
@@ -88,14 +97,27 @@ func (c *scheduleController) Query(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *scheduleController) CallMedicalFile(w http.ResponseWriter, r *http.Request) {
+	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
+	mapData, _ := c.jwtUtils.JwtDecode(tokenString)
+	if mapData["room_id"] == nil {
+		internalServerError(w, r, errors.New("room_id not found"))
+		return
+	}
+	roomId := uint(mapData["room_id"].(float64))
+
 	var payload request.QueryReq[model.Schedule] = request.QueryReq[model.Schedule]{
 		Preload:   []string{},
 		Omit:      map[string][]string{},
-		Condition: "status = ?",
-		Args:      []interface{}{model.S_EXAMINING},
+		Condition: "status = ? AND room_id = ?",
+		Args:      []interface{}{model.S_EXAMINING, roomId},
 	}
 
-	schedule, err := c.query.First(payload.Preload, payload.Omit, payload.Condition, payload.Args...)
+	schedule, err := c.query.First(request.FirstPayload{
+		Preload:   payload.Preload,
+		Omit:      payload.Omit,
+		Condition: payload.Condition,
+	}, payload.Args...)
+
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Println("cc")
 		internalServerError(w, r, err)
@@ -136,7 +158,15 @@ func (s *scheduleController) Transit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *scheduleController) PullMedicalFile(w http.ResponseWriter, r *http.Request) {
-	schedule, err := c.scheduleService.PullSchedule()
+	tokenString := strings.Split(r.Header.Get("Authorization"), " ")[1]
+	mapData, _ := c.jwtUtils.JwtDecode(tokenString)
+	if mapData["room_id"] == nil {
+		internalServerError(w, r, errors.New("room_id not found"))
+		return
+	}
+	roomId := uint(mapData["room_id"].(float64))
+
+	schedule, err := c.scheduleService.PullSchedule(roomId)
 	if err != nil {
 		internalServerError(w, r, err)
 		return
@@ -156,5 +186,6 @@ func NewScheduleController() ScheduleController {
 	return &scheduleController{
 		query:           service.NewQueryService[model.Schedule](),
 		scheduleService: service.NewScheduleService(),
+		jwtUtils:        utils.NewJwtUtils(),
 	}
 }

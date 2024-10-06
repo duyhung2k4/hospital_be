@@ -3,6 +3,7 @@ package config
 import (
 	"net/smtp"
 
+	"github.com/go-chi/jwtauth/v5"
 	"gorm.io/gorm"
 )
 
@@ -23,6 +24,8 @@ var (
 	smtpPassword string
 
 	dbPsql *gorm.DB
+
+	jwt *jwtauth.JWTAuth
 
 	authSmtp smtp.Auth
 )

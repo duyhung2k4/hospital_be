@@ -3,6 +3,7 @@ package config
 import (
 	"net/smtp"
 
+	"github.com/go-chi/jwtauth/v5"
 	"gorm.io/gorm"
 )
 
@@ -28,4 +29,8 @@ func GetSmtpHost() string {
 
 func GetAuthSmtp() smtp.Auth {
 	return authSmtp
+}
+
+func GetJWT() *jwtauth.JWTAuth {
+	return jwt
 }

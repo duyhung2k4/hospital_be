@@ -17,11 +17,11 @@ type scheduleService struct {
 }
 
 type ScheduleService interface {
-	PullSchedule() (*model.Schedule, error)
+	PullSchedule(roomId uint) (*model.Schedule, error)
 	Transit(payload request.TransitReq) error
 }
 
-func (s *scheduleService) PullSchedule() (*model.Schedule, error) {
+func (s *scheduleService) PullSchedule(roomId uint) (*model.Schedule, error) {
 	var schedule model.Schedule
 
 	tx := s.psql.Begin()
@@ -36,7 +36,10 @@ func (s *scheduleService) PullSchedule() (*model.Schedule, error) {
 	}
 
 	if err := tx.Model(&schedule).
-		Update("status", model.S_EXAMINING).
+		Updates(&model.Schedule{
+			Status: model.S_EXAMINING,
+			RoomId: &roomId,
+		}).
 		Error; err != nil {
 		tx.Rollback()
 		return nil, err

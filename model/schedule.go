@@ -10,6 +10,7 @@ import (
 type Schedule struct {
 	gorm.Model
 
+	RoomId      *uint           `json:"roomId"`
 	ClinId      *uint           `json:"clinId"`
 	Code        string          `json:"code" gorm:"unique"`
 	Name        string          `json:"name"`
@@ -18,9 +19,11 @@ type Schedule struct {
 	Gender      string          `json:"gender"`
 	Phone       string          `json:"phone"`
 	Description string          `json:"description"`
+	Result      string          `json:"result"`
 	Avatar      pq.Float64Array `json:"avatar" gorm:"type:float8[]"` // `float8[]` cho PostgreSQL array
-	Status      SCHEDULE_STATUS `json:"status"`                      // pending - examining - transit - finished
+	Status      SCHEDULE_STATUS `json:"status"`                      // pending - examining - transited - finished
 
+	Room *Room    `json:"room" gorm:"foreignKey:RoomId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Clin *Profile `json:"clin" gorm:"foreignKey:ClinId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	Steps []Step `json:"steps" gorm:"foreignKey:ScheduleId"`

@@ -2,6 +2,7 @@ package service
 
 import (
 	"app/config"
+	"app/dto/request"
 
 	"gorm.io/gorm"
 )
@@ -11,21 +12,28 @@ type queryService[T any] struct {
 }
 
 type QueryService[T any] interface {
-	First(preload []string, omit map[string][]string, condition string, agrs ...interface{}) (*T, error)
-	Find(preload []string, omit map[string][]string, condition string, agrs ...interface{}) ([]T, error)
+	First(payload request.FirstPayload, agrs ...interface{}) (*T, error)
+	Find(payload request.FindPayload, agrs ...interface{}) ([]T, error)
 	Create(data T) (*T, error)
 	Update(data T, preload []string, omit map[string][]string, condition string, args ...interface{}) (*T, error)
 	Delete(condition string, args ...interface{}) error
 }
 
-func (s *queryService[T]) First(preload []string, omit map[string][]string, condition string, agrs ...interface{}) (*T, error) {
+func (s *queryService[T]) First(payload request.FirstPayload, agrs ...interface{}) (*T, error) {
 	var item *T
+	var personOmit []string
 
-	query := s.psql.Where(condition, agrs...)
+	for key, omitChild := range payload.Omit {
+		if len(omitChild) == 0 {
+			personOmit = append(personOmit, key)
+		}
+	}
 
-	for _, p := range preload {
+	query := s.psql.Where(payload.Condition, agrs...).Omit(personOmit...)
+
+	for _, p := range payload.Preload {
 		query.Preload(p, func(tx *gorm.DB) *gorm.DB {
-			return tx.Omit(omit[p]...)
+			return tx.Omit(payload.Omit[p]...)
 		})
 	}
 
@@ -37,25 +45,27 @@ func (s *queryService[T]) First(preload []string, omit map[string][]string, cond
 	return item, nil
 }
 
-func (s *queryService[T]) Find(preload []string, omit map[string][]string, condition string, agrs ...interface{}) ([]T, error) {
+func (s *queryService[T]) Find(payload request.FindPayload, agrs ...interface{}) ([]T, error) {
 	var list []T
 	var personOmit []string
 
-	for key, omitChild := range omit {
+	for key, omitChild := range payload.Omit {
 		if len(omitChild) == 0 {
 			personOmit = append(personOmit, key)
 		}
 	}
 
-	query := s.psql.Where(condition, agrs...).Omit(personOmit...)
+	query := s.psql.Where(payload.Condition, agrs...).Omit(personOmit...)
 
-	for _, p := range preload {
+	for _, p := range payload.Preload {
 		query.Preload(p, func(tx *gorm.DB) *gorm.DB {
-			return tx.Omit(omit[p]...)
+			return tx.Omit(payload.Omit[p]...)
 		})
 	}
 
-	err := query.Order("id asc").Find(&list).Error
+	query = query.Order(payload.Order)
+
+	err := query.Find(&list).Error
 	if err != nil {
 		return nil, err
 	}

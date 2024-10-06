@@ -5,6 +5,7 @@ import (
 
 	"app/config"
 	"app/controller"
+	middlewares "app/middlewares"
 	"app/model"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth/v5"
 )
 
 func AppRouter() http.Handler {
@@ -40,28 +42,43 @@ func AppRouter() http.Handler {
 	scheduleController := controller.NewScheduleController()
 
 	roomControllerCustom := controller.NewRoomController()
+	authController := controller.NewAuthController()
 
-	app.Route("/api/v1", func(r chi.Router) {
-		r.Route("/query", func(query chi.Router) {
-			query.Post("/room", roomController.Query)
-			query.Post("/field", fieldController.Query)
-			query.Post("/schedule", scheduleController.Query)
-			query.Post("/department", departmentController.Query)
-			query.Post("/profile", profileController.Query)
-			query.Post("/profile-department", profileDepartmentController.Query)
+	middlewares := middlewares.NewMiddlewares()
+
+	app.Route("/api/v1", func(router chi.Router) {
+		router.Route("/public", func(public chi.Router) {
+			public.Post("/login", authController.Login)
 		})
 
-		r.Route("/schedule", func(schedule chi.Router) {
-			schedule.Get("/call-medical-file", scheduleController.CallMedicalFile)
-			schedule.Post("/pull-medical-file", scheduleController.PullMedicalFile)
-			schedule.Post("/transit", scheduleController.Transit)
-		})
+		router.Route("/protected", func(protected chi.Router) {
+			protected.Use(jwtauth.Verifier(config.GetJWT()))
+			protected.Use(jwtauth.Authenticator(config.GetJWT()))
+			protected.Use(middlewares.ValidateExpAccessToken())
 
-		r.Route("/room", func(room chi.Router) {
-			room.Get("/call-step", roomControllerCustom.CallStep)
-			room.Post("/pull-step", roomControllerCustom.PullStep)
-			room.Post("/save-step", roomControllerCustom.SaveStep)
-			room.Post("/add-account", roomControllerCustom.AddAccount)
+			protected.Post("/refresh-token", authController.RefreshToken)
+
+			protected.Route("/query", func(query chi.Router) {
+				query.Post("/room", roomController.Query)
+				query.Post("/field", fieldController.Query)
+				query.Post("/schedule", scheduleController.Query)
+				query.Post("/department", departmentController.Query)
+				query.Post("/profile", profileController.Query)
+				query.Post("/profile-department", profileDepartmentController.Query)
+			})
+
+			protected.Route("/schedule", func(schedule chi.Router) {
+				schedule.Get("/call-medical-file", scheduleController.CallMedicalFile)
+				schedule.Post("/pull-medical-file", scheduleController.PullMedicalFile)
+				schedule.Post("/transit", scheduleController.Transit)
+			})
+
+			protected.Route("/room", func(room chi.Router) {
+				room.Get("/call-step", roomControllerCustom.CallStep)
+				room.Post("/pull-step", roomControllerCustom.PullStep)
+				room.Post("/save-step", roomControllerCustom.SaveStep)
+				room.Post("/add-account", roomControllerCustom.AddAccount)
+			})
 		})
 	})
 

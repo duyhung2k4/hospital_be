@@ -31,16 +31,21 @@ func (c *queryController[T]) Query(w http.ResponseWriter, r *http.Request) {
 	switch payload.Method {
 	case constant.GET:
 		result, errHandle = c.query.First(
-			payload.Preload,
-			payload.Omit,
-			payload.Condition,
+			request.FirstPayload{
+				Preload:   payload.Preload,
+				Omit:      payload.Omit,
+				Condition: payload.Condition,
+			},
 			payload.Args...,
 		)
 	case constant.GET_ALL:
 		result, errHandle = c.query.Find(
-			payload.Preload,
-			payload.Omit,
-			payload.Condition,
+			request.FindPayload{
+				Preload:   payload.Preload,
+				Omit:      payload.Omit,
+				Condition: payload.Condition,
+				Order:     payload.Order,
+			},
 			payload.Args...,
 		)
 	case constant.CREATE:
