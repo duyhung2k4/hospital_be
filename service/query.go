@@ -100,7 +100,7 @@ func (s *queryService[T]) Update(data T, preload []string, omit map[string][]str
 
 func (s *queryService[T]) Delete(condition string, args ...interface{}) error {
 	var del T
-	if err := s.psql.Where(condition, args...).Delete(&del).Error; err != nil {
+	if err := s.psql.Where(condition, args...).Unscoped().Delete(&del).Error; err != nil {
 		return err
 	}
 	return nil

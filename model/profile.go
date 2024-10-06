@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
@@ -33,3 +35,11 @@ const (
 	SPEC  ROLE = "spec"
 	ROOM  ROLE = "room"
 )
+
+func (p *Profile) BeforeCreate(tx *gorm.DB) (err error) {
+	var existingProfile Profile
+	if err = tx.Unscoped().Where("username = ? AND deleted_at IS NULL", p.Username).First(&existingProfile).Error; err == nil {
+		return fmt.Errorf("username %s đã tồn tại", p.Username)
+	}
+	return nil
+}
