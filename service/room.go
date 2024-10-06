@@ -101,6 +101,10 @@ func (s *roomService) CallStep(roomId uint) (*model.Step, error) {
 	if err := s.psql.
 		Model(&model.Step{}).
 		Where("room_id = ? AND status = ?", roomId, model.ST_EXAMINING).
+		Preload("Schedule").
+		Preload("Department").
+		Preload("Department.Fields").
+		Preload("Room").
 		First(&step).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}

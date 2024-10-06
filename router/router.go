@@ -60,6 +60,7 @@ func AppRouter() http.Handler {
 		r.Route("/room", func(room chi.Router) {
 			room.Get("/call-step", roomControllerCustom.CallStep)
 			room.Post("/pull-step", roomControllerCustom.PullStep)
+			room.Post("/save-step", roomControllerCustom.SaveStep)
 			room.Post("/add-account", roomControllerCustom.AddAccount)
 		})
 	})

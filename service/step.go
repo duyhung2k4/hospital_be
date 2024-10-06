@@ -2,6 +2,7 @@ package service
 
 import (
 	"app/config"
+	"app/dto/request"
 	"app/model"
 	"errors"
 
@@ -15,6 +16,7 @@ type stepService struct {
 
 type StepService interface {
 	NextStep(scheduleId uint) error
+	SaveStep(payload request.SaveStepReq) error
 }
 
 func (s *stepService) NextStep(scheduleId uint) error {
@@ -36,13 +38,18 @@ func (s *stepService) NextStep(scheduleId uint) error {
 
 	if err := tx.Model(&model.Step{}).
 		Where("status = ? AND schedule_id = ?", model.ST_PENDING, schedule.ID).
+		Order("index ASC").
 		Limit(1).
 		First(&step).
 		Error; err != nil {
 		return err
 	}
 	if step.ID == 0 {
-		return errors.New("step not found")
+		if err := tx.Commit().Error; err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	room, err := s.roomService.RoomMinStepWaiting(step.DepartmentId)
@@ -66,6 +73,20 @@ func (s *stepService) NextStep(scheduleId uint) error {
 
 	err = tx.Commit().Error
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *stepService) SaveStep(payload request.SaveStepReq) error {
+	if err := s.psql.
+		Model(&model.Step{}).
+		Where("schedule_id = ? AND room_id = ?", payload.ScheduleId, payload.RoomId).
+		Updates(&model.Step{
+			Status: model.ST_DONE,
+			Result: payload.Result,
+		}).Error; err != nil {
 		return err
 	}
 
