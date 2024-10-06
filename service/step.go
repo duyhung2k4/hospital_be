@@ -41,11 +41,22 @@ func (s *stepService) NextStep(scheduleId uint) error {
 		Order("index ASC").
 		Limit(1).
 		First(&step).
-		Error; err != nil {
+		Error; err != nil && err != gorm.ErrRecordNotFound {
 		return err
 	}
+
 	if step.ID == 0 {
-		if err := tx.Commit().Error; err != nil {
+		err := tx.Model(&model.Schedule{}).
+			Where("id = ?", scheduleId).
+			Updates(&model.Schedule{Status: model.S_FINISHED}).Error
+
+		if err != nil {
+			return err
+		}
+
+		err = tx.Commit().Error
+
+		if err != nil {
 			return err
 		}
 
@@ -60,7 +71,7 @@ func (s *stepService) NextStep(scheduleId uint) error {
 		return errors.New("room not found(1)")
 	}
 
-	if err := s.psql.Model(&model.Step{}).
+	if err := tx.Model(&model.Step{}).
 		Where("id = ?", step.ID).
 		Updates(&model.Step{
 			RoomId: &room.ID,

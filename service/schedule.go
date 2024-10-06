@@ -70,7 +70,12 @@ func (s *scheduleService) Transit(payload request.TransitReq) error {
 	}
 
 	if len(payload.DepartmentIds) == 0 {
+
 		if err := tx.Commit().Error; err != nil {
+			return err
+		}
+
+		if err := s.stepService.NextStep(payload.ScheduleId); err != nil {
 			return err
 		}
 		return nil
