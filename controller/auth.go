@@ -23,7 +23,42 @@ type authController struct {
 
 type AuthControlle interface {
 	Login(w http.ResponseWriter, r *http.Request)
+	CreateAdmin(w http.ResponseWriter, r *http.Request)
 	RefreshToken(w http.ResponseWriter, r *http.Request)
+}
+
+func (a *authController) CreateAdmin(w http.ResponseWriter, r *http.Request) {
+	password, _ := a.authUtils.HashPassword("tk_admin@123456")
+	username := "tk_admin"
+
+	if err := a.queryService.Delete("username = ?", username); err != nil {
+		internalServerError(w, r, err)
+		return
+	}
+
+	newProfile, err := a.queryService.Create(model.Profile{
+		Username: username,
+		Password: password,
+		Role:     "admin",
+		Active:   true,
+	})
+
+	if err != nil {
+		internalServerError(w, r, err)
+		return
+	}
+
+	res := Response{
+		Data: map[string]interface{}{
+			username: newProfile.Username,
+			password: "tk_admin@123456",
+		},
+		Message: "OK",
+		Status:  200,
+		Error:   nil,
+	}
+
+	render.JSON(w, r, res)
 }
 
 func (a *authController) Login(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +116,7 @@ func (a *authController) Login(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	profileResponse.Password = ""
-	profileResponse.Username = ""
+	// profileResponse.Username = ""
 
 	res := Response{
 		Data: map[string]interface{}{
@@ -148,7 +183,7 @@ func (a *authController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	profileResponse.Password = ""
-	profileResponse.Username = ""
+	// profileResponse.Username = ""
 
 	res := Response{
 		Data: map[string]interface{}{

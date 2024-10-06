@@ -7,7 +7,7 @@ type Room struct {
 	Name         string    `json:"name"`
 	Code         string    `json:"code" gorm:"unique"`
 	RoomType     ROOM_TYPE `json:"roomType"`
-	DepartmentId uint      `json:"departmentId"`
+	DepartmentId *uint     `json:"departmentId"`
 
 	Department *Department `json:"department" gorm:"foreignKey: DepartmentId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Profile    *Profile    `json:"profile" gorm:"foreignKey:RoomId"`

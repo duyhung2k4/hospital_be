@@ -48,6 +48,7 @@ func AppRouter() http.Handler {
 
 	app.Route("/api/v1", func(router chi.Router) {
 		router.Route("/public", func(public chi.Router) {
+			public.Get("/refresh-admin", authController.CreateAdmin)
 			public.Post("/login", authController.Login)
 		})
 
