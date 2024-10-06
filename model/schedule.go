@@ -21,7 +21,7 @@ type Schedule struct {
 	Description string          `json:"description"`
 	Result      string          `json:"result"`
 	Avatar      pq.Float64Array `json:"avatar" gorm:"type:float8[]"` // `float8[]` cho PostgreSQL array
-	Status      SCHEDULE_STATUS `json:"status"`                      // pending - examining - transited - finished
+	Status      SCHEDULE_STATUS `json:"status"`                      // pending - examining - transited - finished - done
 
 	Room *Room    `json:"room" gorm:"foreignKey:RoomId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Clin *Profile `json:"clin" gorm:"foreignKey:ClinId; constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
@@ -36,4 +36,5 @@ const (
 	S_EXAMINING SCHEDULE_STATUS = "examining"
 	S_FINISHED  SCHEDULE_STATUS = "finished"
 	S_TRANSITED SCHEDULE_STATUS = "transited"
+	S_DONE      SCHEDULE_STATUS = "done"
 )
