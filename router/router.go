@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/go-chi/render"
 )
 
 func AppRouter() http.Handler {
@@ -47,6 +48,13 @@ func AppRouter() http.Handler {
 	middlewares := middlewares.NewMiddlewares()
 
 	app.Route("/api/v1", func(router chi.Router) {
+
+		router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+			render.JSON(w, r, map[string]interface{}{
+				"mess": "done",
+			})
+		})
+
 		router.Route("/public", func(public chi.Router) {
 			public.Get("/refresh-admin", authController.CreateAdmin)
 			public.Post("/login", authController.Login)
