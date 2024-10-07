@@ -141,6 +141,7 @@ func (a *authController) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	profileId := uint(mapDataRequest["profile_id"].(float64))
 	profileResponse, errProfile := a.queryService.First(request.FirstPayload{
 		Condition: "id = ?",
+		Preload:   []string{"Room"},
 	}, profileId)
 	if errProfile != nil {
 		internalServerError(w, r, errProfile)
