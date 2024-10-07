@@ -15,7 +15,8 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		server := http.Server{
+		// Cấu hình HTTPS
+		httpsServer := http.Server{
 			Addr:           ":" + config.GetAppPort(),
 			Handler:        router.AppRouter(),
 			ReadTimeout:    10 * time.Second,
@@ -23,7 +24,13 @@ func main() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		log.Fatalln(server.ListenAndServe())
+		// Đường dẫn đến chứng chỉ và khóa riêng
+		certFile := "keys/server.crt"
+		keyFile := "keys/server.key"
+
+		// Listen và Serve trên HTTPS
+		log.Println("HTTPS server is running on port 10000")
+		log.Fatalln(httpsServer.ListenAndServeTLS(certFile, keyFile))
 	}()
 
 	wg.Wait()
