@@ -77,12 +77,6 @@ func (c *socketController) FaceLoginSocket(w http.ResponseWriter, r *http.Reques
 	c.mapSocket[uuid] = conn
 	c.mutexSocket.Unlock()
 
-	if c.mapSocket[uuid] == nil {
-		log.Println("is uuid connect: ", false)
-	} else {
-		log.Println("is uuid connect: ", true)
-	}
-
 	// listen connect
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {

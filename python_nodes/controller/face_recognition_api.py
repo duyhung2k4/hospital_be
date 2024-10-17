@@ -58,7 +58,7 @@ def recognize_faces_from_db():
             face_encodings = face_recognition.face_encodings(image_to_check, new_face_locations)
 
             if len(face_encodings) == 0:
-                return -3  # Không tìm thấy khuôn mặt
+                return -3, 0  # Không tìm thấy khuôn mặt, độ chính xác 0
 
             for face_encoding in face_encodings:
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
@@ -75,17 +75,17 @@ def recognize_faces_from_db():
 
                     print(f"ProfileID:{profile_id} / result: {round(accuracy * 100, 2)}")
 
-                    if round(accuracy * 100, 2) >= 75.00:
-                        return profile_id
-                    return -3  # Trả về ID của profile
+                    if round(accuracy * 100, 2) >= 70.00:
+                        return profile_id, round(accuracy * 100, 2)  # Trả về profile_id và độ chính xác
+                    return -3, 0  # Không đủ độ chính xác, trả về -3 và độ chính xác 0
 
-            return -3  # Không tìm thấy khớp nào
+            return -3, 0  # Không tìm thấy khớp nào, độ chính xác 0
 
-        profile_id = recognize_face_in_image(input_image_path)
+        profile_id, accuracy = recognize_face_in_image(input_image_path)
         if profile_id == -3:
             return jsonify({"result": "-3", "message": "No matching faces found."})
         
-        return jsonify({"result": str(profile_id)})
+        return jsonify({"result": str(profile_id), "accuracy": accuracy})
 
     except Exception as e:
         return jsonify({"result": "-4", "error": str(e)}), 500

@@ -193,7 +193,6 @@ func (s *authService) AuthFace(payload queuepayload.FaceAuth) (int, error) {
 		return 0, err
 	}
 	defer resp.Body.Close()
-	defer os.Remove(payload.FilePath)
 
 	// Kiểm tra mã trạng thái HTTP
 	if resp.StatusCode != http.StatusOK {
@@ -202,7 +201,8 @@ func (s *authService) AuthFace(payload queuepayload.FaceAuth) (int, error) {
 
 	// Đọc phản hồi từ API
 	var response struct {
-		Result string `json:"result"`
+		Result   string  `json:"result"`
+		Accuracy float64 `json:"accuracy"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return 0, err
