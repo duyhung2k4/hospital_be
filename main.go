@@ -25,12 +25,13 @@ func main() {
 		}
 
 		// Đường dẫn đến chứng chỉ và khóa riêng
-		certFile := "keys/server.crt"
-		keyFile := "keys/server.key"
+		// certFile := "keys/server.crt"
+		// keyFile := "keys/server.key"
 
 		// Listen và Serve trên HTTPS
 		log.Println("HTTPS server is running on port 10000")
-		log.Fatalln(httpsServer.ListenAndServeTLS(certFile, keyFile))
+		// log.Fatalln(httpsServer.ListenAndServeTLS(certFile, keyFile))
+		log.Fatalln(httpsServer.ListenAndServe())
 	}()
 
 	wg.Wait()
