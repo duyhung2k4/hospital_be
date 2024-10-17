@@ -14,6 +14,11 @@ func init() {
 
 	// connect
 	loadEnv()
+	makeVariable()
 	connectPostgresql(*db)
+	connectRedis()
+	createFolder()
+	initSocket()
+	connectRabbitmq()
 	initSmptAuth()
 }

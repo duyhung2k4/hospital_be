@@ -60,6 +60,14 @@ func AppRouter() http.Handler {
 			public.Post("/login", authController.Login)
 		})
 
+		router.Route("/auth", func(auth chi.Router) {
+			auth.Post("/register", authController.Register)
+			auth.Post("/auth-face", authController.AuthFace)
+			auth.Post("/send-file-auth", authController.SendFileAuth)
+			auth.Post("/save-process", authController.SaveProcess)
+			auth.Post("/create-socket-auth-face", authController.CreateSocketAuthFace)
+		})
+
 		router.Route("/protected", func(protected chi.Router) {
 			protected.Use(jwtauth.Verifier(config.GetJWT()))
 			protected.Use(jwtauth.Authenticator(config.GetJWT()))

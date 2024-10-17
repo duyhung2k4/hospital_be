@@ -23,7 +23,7 @@ def face_encoding():
     list_face_encoding = []
     errors = []
 
-    # Các mức độ sáng khác nhau: 3 mức, 1.0 là sáng trung bình (ảnh gốc)
+    # Các mức độ sáng khác nhau: 5 mức, 1.0 là sáng trung bình (ảnh gốc)
     brightness_factors = [0.6, 0.8, 1.0, 1.2, 1.6]
 
     try:

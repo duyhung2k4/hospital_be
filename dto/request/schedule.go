@@ -11,4 +11,5 @@ type SaveStepReq struct {
 	ScheduleId uint   `json:"scheduleId"`
 	Result     string `json:"result"`
 	RoomId     uint   `json:"roomId"`
+	SpecId     uint   `json:"specId"`
 }

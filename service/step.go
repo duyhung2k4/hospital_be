@@ -97,6 +97,7 @@ func (s *stepService) SaveStep(payload request.SaveStepReq) error {
 		Updates(&model.Step{
 			Status: model.ST_DONE,
 			Result: payload.Result,
+			SpecId: &payload.SpecId,
 		}).Error; err != nil {
 		return err
 	}

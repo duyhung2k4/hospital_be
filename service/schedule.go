@@ -64,7 +64,7 @@ func (s *scheduleService) Transit(payload request.TransitReq) error {
 		Updates(&model.Schedule{
 			Description: payload.Description,
 			Status:      model.S_TRANSITED,
-			// ClinId:      &payload.ClinId,
+			ClinId:      &payload.ClinId,
 		}); result.RowsAffected == 0 || result.Error != nil {
 		return errors.New("schedule not found")
 	}
