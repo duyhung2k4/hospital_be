@@ -9,6 +9,8 @@ import (
 	"app/model"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -38,6 +40,7 @@ func AppRouter() http.Handler {
 	departmentController := controller.NewQueryController[model.Department]()
 	fieldController := controller.NewQueryController[model.Field]()
 	roomController := controller.NewQueryController[model.Room]()
+	logCheckController := controller.NewQueryController[model.LogCheck]()
 	profileDepartmentController := controller.NewQueryController[model.ProfileDepartment]()
 	profileController := controller.NewQueryController[model.Profile]()
 	scheduleController := controller.NewScheduleController()
@@ -81,6 +84,7 @@ func AppRouter() http.Handler {
 				query.Post("/schedule", scheduleController.Query)
 				query.Post("/department", departmentController.Query)
 				query.Post("/profile", profileController.Query)
+				query.Post("/logcheck", logCheckController.Query)
 				query.Post("/profile-department", profileDepartmentController.Query)
 			})
 
@@ -96,6 +100,21 @@ func AppRouter() http.Handler {
 				room.Post("/save-step", roomControllerCustom.SaveStep)
 				room.Post("/add-account", roomControllerCustom.AddAccount)
 			})
+		})
+
+		router.Get("/file/save_auth/{filename}", func(w http.ResponseWriter, r *http.Request) {
+			filename := chi.URLParam(r, "filename")
+			imagePath := filepath.Join("file/save_auth", filename) // Thay đổi đường dẫn này
+
+			// Kiểm tra nếu file tồn tại
+			if _, err := os.Stat(imagePath); os.IsNotExist(err) {
+				http.Error(w, "File not found", http.StatusNotFound)
+				return
+			}
+
+			// Set header Content-Type để trình duyệt nhận diện đúng loại file
+			w.Header().Set("Content-Type", "image/png") // Hoặc loại hình ảnh tương ứng
+			http.ServeFile(w, r, imagePath)
 		})
 	})
 
