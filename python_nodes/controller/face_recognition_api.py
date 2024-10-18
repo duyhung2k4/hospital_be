@@ -58,28 +58,28 @@ def recognize_faces_from_db():
             face_encodings = face_recognition.face_encodings(image_to_check, new_face_locations)
 
             if len(face_encodings) == 0:
-                return -3, 0  # Không tìm thấy khuôn mặt, độ chính xác 0
+                return -3, 0
 
             for face_encoding in face_encodings:
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
 
                 if not any(matches):
-                    continue  # Không tìm thấy khớp nào, tiếp tục với mã hóa tiếp theo
+                    continue
 
                 face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
                 best_match_index = np.argmin(face_distances)
 
                 if matches[best_match_index]:
                     profile_id = known_profile_ids[best_match_index]
-                    accuracy = 1 - face_distances[best_match_index]  # Tính toán độ chính xác
+                    accuracy = 1 - face_distances[best_match_index]
 
                     print(f"ProfileID:{profile_id} / result: {round(accuracy * 100, 2)}")
 
                     if round(accuracy * 100, 2) >= 80.00:
-                        return profile_id, round(accuracy * 100, 2)  # Trả về profile_id và độ chính xác
-                    return -3, 0  # Không đủ độ chính xác, trả về -3 và độ chính xác 0
+                        return profile_id, round(accuracy * 100, 2)
+                    return -3, 0
 
-            return -3, 0  # Không tìm thấy khớp nào, độ chính xác 0
+            return -3, 0
 
         profile_id, accuracy = recognize_face_in_image(input_image_path)
         if profile_id == -3:

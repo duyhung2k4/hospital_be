@@ -10,7 +10,7 @@ def adjust_brightness(image, factor):
     """Điều chỉnh độ sáng của ảnh."""
     pil_image = Image.fromarray(image)
     enhancer = ImageEnhance.Brightness(pil_image)
-    enhanced_image = enhancer.enhance(factor)  # Tăng hoặc giảm độ sáng
+    enhanced_image = enhancer.enhance(factor)  # độ sáng
     return np.array(enhanced_image)
 
 @face_encoding_bp.route('/face_encoding', methods=['POST'])
@@ -23,7 +23,7 @@ def face_encoding():
     list_face_encoding = []
     errors = []
 
-    # Các mức độ sáng khác nhau: 5 mức, 1.0 là sáng trung bình (ảnh gốc)
+    # mức sáng
     brightness_factors = [0.6, 0.8, 1.0, 1.2, 1.6]
 
     try:
@@ -33,22 +33,22 @@ def face_encoding():
             try:
                 new_image = face_recognition.load_image_file(image_path)
                 
-                # Tăng cường dữ liệu với các mức độ sáng khác nhau
+                # Tăng cường ảnh
                 for factor in brightness_factors:
-                    # Điều chỉnh độ sáng của ảnh
+                    # Chỉnh độ sáng
                     brightened_image = adjust_brightness(new_image, factor)
 
-                    # Lấy vị trí khuôn mặt
+                    # Vị trí mặt
                     face_locations = face_recognition.face_locations(brightened_image)
                     
-                    # Lấy các điểm đặc trưng trên khuôn mặt
+                    # Điểm đặc trưng
                     face_landmarks_list = face_recognition.face_landmarks(brightened_image)
 
                     if len(face_locations) == 0 or len(face_landmarks_list) == 0:
                         errors.append(f"No face found in {image_file} with brightness factor {factor}")
                         continue
 
-                    # Lặp qua từng khuôn mặt trong hình ảnh
+                    # Lặp qua hình ảnh
                     for i, face_location in enumerate(face_locations):
                         # Lấy các điểm lông mày
                         landmarks = face_landmarks_list[i]
@@ -56,17 +56,13 @@ def face_encoding():
                         right_eyebrow = landmarks.get("right_eyebrow", [])
 
                         if left_eyebrow and right_eyebrow:
-                            # Tính tọa độ `y` trung bình của lông mày để xác định khu vực từ lông mày trở xuống
                             eyebrow_top_y = min([point[1] for point in left_eyebrow + right_eyebrow])
-
-                            # Điều chỉnh vị trí khuôn mặt để chỉ lấy từ trên lông mày trở xuống
-                            top, right, bottom, left = face_location
-                            new_top = eyebrow_top_y  # Tọa độ mới từ trên lông mày
                             
-                            # Cập nhật vùng khuôn mặt để mã hóa chỉ từ lông mày trở xuống
+                            top, right, bottom, left = face_location
+                            new_top = eyebrow_top_y  
+                            
                             new_face_location = (new_top, right, bottom, left)
-
-                            # Mã hóa đặc trưng khuôn mặt
+                            
                             new_face_encodings = face_recognition.face_encodings(brightened_image, [new_face_location])
 
                             if len(new_face_encodings) > 0:

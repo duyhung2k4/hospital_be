@@ -52,18 +52,15 @@ def calculate_head_pose(landmarks):
 @calculate_head_pose_bp.route('/calculate_head_pose', methods=['POST'])
 def calculate_pose():
     try:
-        # Lấy đường dẫn ảnh từ yêu cầu POST
         data = request.json
         image_path = data['input_image_path']
 
-        # Đọc và xử lý ảnh
         image = cv2.imread(image_path)
         if image is None:
             return jsonify({"error": "Image not found"}), 404
 
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Phát hiện khuôn mặt
         detector = dlib.get_frontal_face_detector()
         current_dir = os.path.dirname(os.path.abspath(__file__))
         predictor_path = os.path.join(current_dir, "shape_predictor_68_face_landmarks.dat")

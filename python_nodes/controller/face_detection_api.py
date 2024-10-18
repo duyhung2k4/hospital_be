@@ -17,7 +17,6 @@ def detect_single_face():
         if image is None:
             return jsonify({"result": False, "error": "Unable to load image."}), 400
         
-        # Resize image to improve speed (if image is large)
         if image.shape[0] > 800 or image.shape[1] > 800:
             scale_factor = 800 / max(image.shape[0], image.shape[1])
             image = cv2.resize(image, (0, 0), fx=scale_factor, fy=scale_factor)
