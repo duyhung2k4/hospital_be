@@ -24,7 +24,7 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		server := http.Server{
+		server := &http.Server{
 			Addr:           ":" + config.GetAppPort(),
 			Handler:        router.AppRouter(),
 			ReadTimeout:    300 * time.Second,
@@ -32,12 +32,13 @@ func main() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		log.Fatalln(server.ListenAndServe())
+		// Sử dụng ListenAndServeTLS để chạy server với HTTPS
+		log.Fatalln(server.ListenAndServeTLS("keys/server.crt", "keys/server.key"))
 	}()
 
 	go func() {
 		defer wg.Done()
-		socker := http.Server{
+		socker := &http.Server{
 			Addr:           ":" + config.GetSocketPort(),
 			Handler:        socket.ServerSocker(),
 			ReadTimeout:    300 * time.Second,
@@ -45,7 +46,8 @@ func main() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		log.Fatalln(socker.ListenAndServe())
+		// Sử dụng ListenAndServeTLS cho socket server
+		log.Fatalln(socker.ListenAndServeTLS("keys/server.crt", "keys/server.key"))
 	}()
 
 	go func() {
