@@ -2,6 +2,7 @@ package service
 
 import (
 	"app/config"
+	"app/constant"
 	queuepayload "app/dto/queue_payload"
 	"app/dto/request"
 	"app/model"
@@ -19,6 +20,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rabbitmq/amqp091-go"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -27,6 +29,7 @@ type authService struct {
 	psql     *gorm.DB
 	redis    *redis.Client
 	jwtUtils utils.JwtUtils
+	rabbitmq *amqp091.Connection
 }
 
 type AuthService interface {
@@ -37,6 +40,7 @@ type AuthService interface {
 	SaveFileAuth(profileId uint) error
 	GetProfile(profileId uint) (*model.Profile, error)
 	CreateToken(profileId uint) (string, string, error)
+	ShowCheck(payload queuepayload.ShowCheck) error
 }
 
 func (s *authService) CheckFace(payload queuepayload.SendFileAuthMess) (string, error) {
@@ -190,12 +194,14 @@ func (s *authService) AuthFace(payload queuepayload.FaceAuth) (int, error) {
 	// Gửi yêu cầu POST đến API Flask
 	resp, err := http.Post("http://localhost:5000/recognize_faces", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
+		os.Remove(payload.FilePath)
 		return 0, err
 	}
 	defer resp.Body.Close()
 
 	// Kiểm tra mã trạng thái HTTP
 	if resp.StatusCode != http.StatusOK {
+		os.Remove(payload.FilePath)
 		return 0, fmt.Errorf("failed to call API, status code: %d", resp.StatusCode)
 	}
 
@@ -209,11 +215,47 @@ func (s *authService) AuthFace(payload queuepayload.FaceAuth) (int, error) {
 	}
 
 	// Xử lý kết quả từ API
-	if response.Result == "-1" {
-		return -1, nil // Không tìm thấy khuôn mặt phù hợp
-	}
+	// if response.Result == "-1" {
+	// 	return -1, nil // Không tìm thấy khuôn mặt phù hợp
+	// }
 
 	profileId, err := strconv.Atoi(response.Result)
+	if err != nil {
+		return 0, err
+	}
+
+	if profileId <= 0 {
+		os.Remove(payload.FilePath)
+		return profileId, nil
+	}
+
+	// show check
+	ch, err := s.rabbitmq.Channel()
+	if err != nil {
+		return 0, err
+	}
+	dataMess := queuepayload.ShowCheck{
+		FilePath:  payload.FilePath,
+		ProfileId: response.Result,
+		Accuracy:  response.Accuracy,
+	}
+
+	dataMessString, err := json.Marshal(dataMess)
+	if err != nil {
+		return 0, err
+	}
+
+	err = ch.PublishWithContext(
+		context.Background(),
+		"",
+		string(constant.SHOW_CHECK_QUEUE),
+		false,
+		false,
+		amqp091.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(dataMessString),
+		},
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -366,10 +408,57 @@ func (s *authService) CreateToken(profileId uint) (string, string, error) {
 	return accessToken, refreshToken, nil
 }
 
+func (s *authService) ShowCheck(payload queuepayload.ShowCheck) error {
+	// Tạo đường dẫn đến thư mục chứa ảnh
+	filename := strings.Split(payload.FilePath, "/")[2]
+	pathFileAuthFace := fmt.Sprintf("file/auth_face/%s", filename)
+	saveFileAuthFace := fmt.Sprintf("file/save_auth/%s", filename)
+
+	// Tạo dữ liệu JSON để gửi đến API
+	data := map[string]interface{}{
+		"input_image_path": pathFileAuthFace,
+		"save_path":        saveFileAuthFace,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	// Gửi yêu cầu POST đến API Flask
+	resp, err := http.Post("http://localhost:5000/show_check", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	defer os.Remove(pathFileAuthFace)
+
+	profileId, err := strconv.Atoi(payload.ProfileId)
+	if err != nil {
+		return err
+	}
+
+	log.Println(payload.ProfileId)
+	log.Println(profileId)
+
+	var logCheck *model.LogCheck = &model.LogCheck{
+		ProfileId: uint(profileId),
+		Accuracy:  payload.Accuracy,
+		Url:       saveFileAuthFace,
+	}
+
+	if err := s.psql.Model(&model.LogCheck{}).Create(&logCheck).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func NewAuthService() AuthService {
 	return &authService{
 		redis:    config.GetRedisClient(),
 		psql:     config.GetPsql(),
+		rabbitmq: config.GetRabbitmq(),
 		jwtUtils: utils.NewJwtUtils(),
 	}
 }

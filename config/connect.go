@@ -39,6 +39,7 @@ func connectPostgresql(migrate bool) error {
 			&model.Room{},
 			&model.Schedule{},
 			&model.Step{},
+			&model.LogCheck{},
 		)
 
 		if errMigrate != nil {

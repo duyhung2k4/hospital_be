@@ -15,4 +15,7 @@ func createFolder() {
 	if err := os.Mkdir("file/auth_face", 0777); err != nil {
 		log.Println(err)
 	}
+	if err := os.Mkdir("file/save_auth", 0777); err != nil {
+		log.Println(err)
+	}
 }

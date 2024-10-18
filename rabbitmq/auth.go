@@ -29,6 +29,7 @@ type queueAuth struct {
 type QueueAuth interface {
 	InitQueueSendFileAuth()
 	InitQueueAuthFace()
+	InitQueueShowCheck()
 	sendMess(data interface{}, socket *websocket.Conn)
 }
 
@@ -194,6 +195,64 @@ func (q *queueAuth) InitQueueAuthFace() {
 				Error: nil,
 			}
 			q.sendMess(res, socket)
+		}(msg)
+	}
+}
+
+func (q *queueAuth) InitQueueShowCheck() {
+	ch, err := q.rabbitmq.Channel()
+	if err != nil {
+		log.Println("Failed to open a channel:", err)
+		return
+	}
+	defer ch.Close()
+
+	queueName := fmt.Sprint(constant.SHOW_CHECK_QUEUE)
+	_, err = ch.QueueDeclare(
+		queueName,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		log.Println("Failed to declare a queue:", err)
+		return
+	}
+
+	msgs, err := ch.Consume(
+		queueName,
+		"",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		log.Println("Failed to register a consumer:", err)
+		return
+	}
+
+	var wg sync.WaitGroup
+	for msg := range msgs {
+		wg.Add(1)
+		go func(msg amqp091.Delivery) {
+			defer wg.Done()
+			msg.Ack(false)
+
+			var dataMess queuepayload.ShowCheck
+			if err := json.Unmarshal(msg.Body, &dataMess); err != nil {
+				return
+			}
+
+			err := q.authService.ShowCheck(dataMess)
+			if err != nil {
+				log.Println(err)
+			}
 		}(msg)
 	}
 }
