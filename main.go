@@ -2,7 +2,6 @@ package main
 
 import (
 	"app/config"
-	pythonnodes "app/python_nodes"
 	"app/rabbitmq"
 	"app/router"
 	"app/socket"
@@ -15,12 +14,7 @@ import (
 func main() {
 	var wg sync.WaitGroup
 
-	wg.Add(3)
-
-	go func() {
-		defer wg.Done()
-		pythonnodes.RunPythonServer(config.GetPythonNodePort())
-	}()
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
@@ -32,8 +26,7 @@ func main() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		// Sử dụng ListenAndServeTLS để chạy server với HTTPS
-		log.Fatalln(server.ListenAndServeTLS("keys/server.crt", "keys/server.key"))
+		log.Fatalln(server.ListenAndServe())
 	}()
 
 	go func() {
@@ -46,8 +39,7 @@ func main() {
 			MaxHeaderBytes: 1 << 20,
 		}
 
-		// Sử dụng ListenAndServeTLS cho socket server
-		log.Fatalln(socker.ListenAndServeTLS("keys/server.crt", "keys/server.key"))
+		log.Fatalln(socker.ListenAndServe())
 	}()
 
 	go func() {
